@@ -387,7 +387,7 @@
             transform: translateX(-50%);
             font-size: 9px;
             font-weight: 700;
-            color: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.25);
             letter-spacing: 1px;
             pointer-events: none;
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
@@ -646,7 +646,7 @@
                     <button class="start-btn" data-key=" " data-code="Space">START</button>
                 </div>
 
-                <!-- Joystick (camera) -->
+                <!-- Joystick (camera) - FIXED SENSITIVITY -->
                 <div class="joystick-wrap" id="joystickWrap">
                     <div class="joystick-base" id="joystickBase">
                         <div class="joystick-thumb" id="joystickThumb"></div>
@@ -713,7 +713,7 @@
     </script>
 
 
-    <!-- ─── CONTROLLER SCRIPT ─── -->
+    <!-- ─── CONTROLLER SCRIPT (FIXED JOYSTICK) ─── -->
     <script>
         (function() {
             'use strict';
@@ -791,7 +791,7 @@
                 }, { passive: false });
             });
 
-            // ── Joystick (camera) with sensitivity ──
+            // ── Joystick (camera) with FIXED sensitivity ──
             var base = document.getElementById('joystickBase');
             var thumb = document.getElementById('joystickThumb');
             if (base && thumb) {
@@ -804,18 +804,24 @@
                     right: 'ArrowRight'
                 };
 
-                function updateKeys(dx, dy) {
-                    var threshold = 0.15; // sensitivity / deadzone
-                    var up = dy < -threshold;
-                    var down = dy > threshold;
-                    var left = dx < -threshold;
-                    var right = dx > threshold;
+                // Sensitivity: lower threshold = more responsive
+                var THRESHOLD = 0.08; // was 0.15
+                var DEADZONE_PX = 4; // was 6
 
+                function updateKeys(dx, dy) {
+                    // dx, dy normalized -1..1
+                    var up = dy < -THRESHOLD;
+                    var down = dy > THRESHOLD;
+                    var left = dx < -THRESHOLD;
+                    var right = dx > THRESHOLD;
+
+                    // Release all first
                     releaseKey(keys.up);
                     releaseKey(keys.down);
                     releaseKey(keys.left);
                     releaseKey(keys.right);
 
+                    // Press active ones (allows diagonals)
                     if (up) pressKey(keys.up);
                     if (down) pressKey(keys.down);
                     if (left) pressKey(keys.left);
@@ -832,13 +838,13 @@
                     var dy = clientY - cy;
                     var dist = Math.sqrt(dx * dx + dy * dy);
 
-                    // deadzone
-                    var dead = 6;
-                    if (dist < dead) {
+                    // Deadzone
+                    if (dist < DEADZONE_PX) {
                         dx = 0;
                         dy = 0;
                         dist = 0;
                     }
+                    // Clamp to max
                     if (dist > maxDist) {
                         var angle = Math.atan2(dy, dx);
                         dx = Math.cos(angle) * maxDist;
@@ -846,10 +852,10 @@
                         dist = maxDist;
                     }
 
-                    // move thumb
+                    // Move thumb
                     thumb.style.transform = 'translate(calc(-50% + ' + dx + 'px), calc(-50% + ' + dy + 'px))';
 
-                    // normalize
+                    // Normalize
                     var normX = dist === 0 ? 0 : dx / maxDist;
                     var normY = dist === 0 ? 0 : dy / maxDist;
                     updateKeys(normX, normY);
@@ -953,7 +959,7 @@
                 }
             });
 
-            console.log('🎮 N64 Hybrid Pocket ready!');
+            console.log('🎮 N64 Hybrid Pocket ready – joystick sensitivity fixed!');
         })();
     </script>
 
